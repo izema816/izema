@@ -21,58 +21,58 @@ menu = """
 1) SYN ACK Scan (Fast/Stealth)
 2) UDP Scan (Find hidden services)
 3) Comprehensive Scan (Versions & Vulnerabilities)
-4) Network Sweep (Find every device on Wi-Fi)
-5) Extract Device Names (DNS Reverse Lookup)
-6) Public Domain History (Whois/External)
-7) LIVE History Sniffer (Watch website requests)
-8) Data Detective (Find who is watching Reels/Videos)
-9) Targeted Deep Detective (Detailed Domains/SNI)
-10) Deauth Kick (Kick a device off Wi-Fi)
-11) Vendor Lookup (Identify Device Manufacturer)
-12) Exit
+4) Targeted Deep Detective (Detailed Domains/SNI)
+5) Exit
 """
 
 while True:
     print("\n" + "-"*30)
     print(menu)
-    resp = input("Select an option: ").lower().strip()
+    resp = input("Select an option: ").strip()
 
-    if resp == "1" or "syn" in resp:
-        print(f"\n[*] Scanning {ip_addr}...")
+    if resp == "1":
+        print("\n[*] Running SYN ACK Scan on " + ip_addr + "...")
         scanner.scan(ip_addr, "1-1024", "-v -sS")
         if ip_addr in scanner.all_hosts():
-            print(f"Ports: {list(scanner[ip_addr]['tcp'].keys()) if 'tcp' in scanner[ip_addr] else 'None'}")
+            ports = list(scanner[ip_addr]['tcp'].keys()) if 'tcp' in scanner[ip_addr] else 'None'
+            print("Open Ports: " + str(ports))
 
-    elif resp == "4" or "sweep" in resp:
-        print("\n[*] Scanning entire local network...")
-        base_net = ".".join(ip_addr.split(".")[:-1]) + ".0/24"
-        scanner.scan(hosts=base_net, arguments='-sn')
-        for host in scanner.all_hosts():
-            print(f"Found: {host: <15} | Name: {scanner[host].hostname()}")
+    elif resp == "2":
+        print("\n[*] Running UDP Scan on " + ip_addr + "...")
+        scanner.scan(ip_addr, "1-1024", "-sU")
+        if ip_addr in scanner.all_hosts():
+            ports = list(scanner[ip_addr]['udp'].keys()) if 'udp' in scanner[ip_addr] else 'None'
+            print("Open UDP Ports: " + str(ports))
 
-    elif resp == "9" or "watch" in resp:
-        target = input(f"Enter IP to watch [Default {ip_addr}]: ")
+    elif resp == "3":
+        print("\n[*] Running Comprehensive Scan on " + ip_addr + "...")
+        scanner.scan(ip_addr, "1-1024", "-sV -sC --script vuln")
+        if ip_addr in scanner.all_hosts():
+            for proto in scanner[ip_addr].all_protocols():
+                print("\nProtocol: " + proto)
+                for port in scanner[ip_addr][proto].keys():
+                    state = scanner[ip_addr][proto][port]['state']
+                    name  = scanner[ip_addr][proto][port]['name']
+                    ver   = scanner[ip_addr][proto][port].get('version', '')
+                    print("  Port " + str(port) + ": " + state + " | " + name + " " + ver)
+
+    elif resp == "4":
+        target = input("Enter IP to watch [Default " + ip_addr + "]: ").strip()
         target_to_watch = target if target else ip_addr
-        print(f"\n[*] DEEP DETECTIVE: Catching detailed hostnames for {target_to_watch}...")
-        print("[*] (Capturing SNI and HTTP Hosts - Press Ctrl+C to stop)")
-        
-        # This TShark command pulls the specific server names even inside HTTPS handshakes
-        cmd = (f"sudo tshark -i any -f 'host {target_to_watch}' -l -T fields "
-               f"-e tls.handshake.extensions_server_name -e http.host "
-               f"-Y 'tls.handshake.extensions_server_name or http.host'")
-        
+        print("\n[*] DEEP DETECTIVE: Catching detailed hostnames for " + target_to_watch + "...")
+        print("[*] Capturing SNI and HTTP Hosts - Press Ctrl+C to stop")
+
+        cmd = ("sudo tshark -i any -f 'host " + target_to_watch + "' -l -T fields "
+               "-e tls.handshake.extensions_server_name -e http.host "
+               "-Y 'tls.handshake.extensions_server_name or http.host'")
         try:
             os.system(cmd)
         except KeyboardInterrupt:
             print("\nStopping Deep Dive...")
 
-    elif resp == "10" or "kick" in resp:
-        target_mac = input("Enter Target Device MAC: ")
-        router_mac = input("Enter Router MAC: ")
-        interface = input("Enter Wi-Fi Interface (wlan0mon): ")
-        print(f"[*] Sending continuous Deauth... Ctrl+C to stop.")
-        os.system(f"sudo aireplay-ng -0 0 -a {router_mac} -c {target_mac} {interface}")
-
-    elif resp == "12" or "exit" in resp:
+    elif resp == "5":
         print("Powering down.")
         break
+
+    else:
+        print("Invalid option. Please choose 1-5.")
