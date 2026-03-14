@@ -1,4 +1,4 @@
-# IZEMA 816 - Network Monitor & Defender
+# IZEMA 816 - nmap scanner
 
 A Python-based network scanning and monitoring tool built for local network analysis using Nmap and TShark.
 
@@ -13,7 +13,7 @@ IZEMA 816 gives you 4 powerful tools in one terminal interface:
 | 1 | SYN ACK Scan | Stealthy TCP scan across ports 1-1024 without completing the handshake |
 | 2 | UDP Scan | Discovers hidden services running on UDP ports |
 | 3 | Comprehensive Scan | Full version detection + vulnerability scripts via Nmap |
-| 4 | Deep Detective | Live capture of domain names and SNI from a target device |
+| 4 | Exit|
 
 ---
 
@@ -88,8 +88,7 @@ Enter Main Gateway IP (e.g., 192.168.1.1): 192.168.1.1
 1) SYN ACK Scan
 2) UDP Scan
 3) Comprehensive Scan
-4) Deep Detective
-5) Exit
+4) Exit
 
 Select an option: 1
 ```
